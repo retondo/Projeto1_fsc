@@ -65,5 +65,3 @@ int main(int argc, char *argv[]) {
 int interruptControl() {
     return rand()%21;
 }
-
-
