@@ -1,0 +1,13 @@
+2 
+0
+24
+s
+
+P(s)
+exec 20
+read 10
+exec 70
+write 30
+exec 50
+V(s)
+ 
