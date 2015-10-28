@@ -1,22 +1,20 @@
 #include "projeto1.h"
 #include <stdlib.h>
-#include <forms.h>
-#include <dirent.h>
 #include <string.h>
 //#include <pthread.h>
 
 int interruptControl() {
-    return rand()%21;
+    return rand()%12;
 }
 
 //****************************************************************************
 //*********************** CALBACK DOS BOTOES DO FORMULARIO *******************
 //****************************************************************************
 
-void prgs_callback(FL_OBJECT *obj, long user_data) {    
+void prgs_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
     const char *fname;
-    if ( ( fname = fl_show_file_selector( "File To Load", "", "*txt", "" ) ) )
+    if ( ( fname = fl_show_file_selector( "File To Load", "", "", "" ) ) )
     {
         if ( ! fl_load_browser( fdui->dados_programas, fname ) )
             fl_add_browser_line( fdui->dados_programas,"NO SUCH FILE!" );
@@ -48,8 +46,7 @@ void cria_processo_callback(FL_OBJECT *obj, long user_data) {
 //******************************** FORMULARIO ********************************
 //****************************************************************************
 
-FD_projeto *
-create_form_projeto( void )
+FD_projeto *create_form_projeto(void)
 {
     FL_OBJECT *obj;
     FD_projeto *fdui = ( FD_projeto * ) fl_malloc( sizeof *fdui );
@@ -92,7 +89,7 @@ create_form_projeto( void )
 //****************************************************************************
 
 
-int main(int argc, char * argv[ ] ){   
+int main(int argc, char * argv[]) {
 
     //DEFINIÇÃO DOS PARAMETROS DAS THREADS
     /*pthread_t functions[20];
