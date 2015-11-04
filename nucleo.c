@@ -88,6 +88,18 @@ int sysCall() {
     }
 }
 
+int retornaInteiroDaAcao(char linha) {
+    int k = 1, j = 0;
+    char n[10];
+    while (linha[k] != '\n') {
+        while (linha[k] != ' ')
+            k++;
+        n[j] = linha[k+1];
+        j++;
+    }
+    return (atoi(n));
+}
+
 int readFile(const char caminho) {
     FILE *f;
     char linha[50];
@@ -99,10 +111,11 @@ int readFile(const char caminho) {
         fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!\nPor favor, selecione um arquivo valido.");
         sysCall();
     } else {
-        char nome[50], sem[10];
+        char nome[50], sem[10], n[10];
         long seg_id, seg_tam;
         int prioridade;
 
+        // Captura somente o cabeçalho
         for (i = 0; (fgets(linha, 50, f)) != NULL; i++) {
             switch (i) {
             case 0:
@@ -119,6 +132,24 @@ int readFile(const char caminho) {
                 break;
             case 4:
                 strcpy(sem, linha);
+                break;
+            case (linha[0] == '\n'):
+                break;
+            case (linha[0] == 'e'):
+                // Chama a ação lida
+                exec(retornaInteiroDaAcao(linha));
+                break;
+            case (linha[0] == 'r'):
+                read(retornaInteiroDaAcao(linha));
+                break;
+            case (linha[0] == 'w'):
+                write(retornaInteiroDaAcao(linha));
+                break;
+            case (linha[0] == 'P'):
+                semaphoreP();
+                break;
+            case (linha[0] == 'V'):
+                semaphoreV();
                 break;
             default:
                 // iserir callback
