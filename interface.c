@@ -1,28 +1,29 @@
-#include "projeto1.h"
-#include <stdlib.h>
-#include <string.h>
-//#include <pthread.h>
-
-int interruptControl() {
-    return rand()%12;
-}
+#include "interface.h"
+#include "nucleo.h"
 
 //****************************************************************************
-//*********************** CALBACK DOS BOTOES DO FORMULARIO *******************
+//*********************** CALLBACK DOS BOTOES DO FORMULARIO *******************
 //****************************************************************************
 
 void prgs_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
-    const char *fname;
+    //const char *fname;
     if ( ( fname = fl_show_file_selector( "File To Load", "", "", "" ) ) )
     {
         if ( ! fl_load_browser( fdui->dados_programas, fname ) )
             fl_add_browser_line( fdui->dados_programas,"NO SUCH FILE!" );
         else
-            fl_add_browser_line( fdui->acontecimentos,  "Programa Carregado");
+            fl_add_browser_line( fdui->acontecimentos,  "Programa Carregado");            
     }
 
 }
+
+/*void prgsAuto_callback(FL_OBJECT *obj, long user_data) {
+    FD_projeto *fdui = obj->form->fdui;
+    //const char *fname;
+    fname = fl_show_file_selector( "File To Load", "", "", "" );
+    printf("%s", fname);
+}*/
 
 void sorteio_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
@@ -33,12 +34,12 @@ void sorteio_callback(FL_OBJECT *obj, long user_data) {
 
 void limpar_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
-    fl_clear_browser(fdui->acontecimentos);   
+    fl_clear_browser(fdui->acontecimentos);
 }
 
 void cria_processo_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
-    fl_add_browser_line( fdui->acontecimentos, "Funcao ainda nao implementada" );  
+    fl_add_browser_line( fdui->acontecimentos, "Funcao ainda nao implementada" );
 }
 
 
@@ -49,7 +50,7 @@ void cria_processo_callback(FL_OBJECT *obj, long user_data) {
 FD_projeto *create_form_projeto(void)
 {
     FL_OBJECT *obj;
-    FD_projeto *fdui = ( FD_projeto * ) fl_malloc( sizeof *fdui );
+    fdui = ( FD_projeto * ) fl_malloc( sizeof *fdui );
 
     fdui->vdata = fdui->cdata = NULL;
     fdui->ldata = 0;
@@ -81,41 +82,4 @@ FD_projeto *create_form_projeto(void)
     fdui->projeto->fdui = fdui;
 
     return fdui;
-}
-
-
-//****************************************************************************
-//**********************************INICIO MAIN*******************************
-//****************************************************************************
-
-
-int main(int argc, char * argv[]) {
-
-    //DEFINIÇÃO DOS PARAMETROS DAS THREADS
-    /*pthread_t functions[20];
-    pthread_attr_t atrib;
-    pthread_attr_init(&atrib);
-    pthread_attr_setscope(&atrib,PTHREAD_SCOPE_PROCESS);
-    pthread_create(&functions[1],&atrib,interruptControl,NULL);           
-    */
-
-    //DEFININDO SEMENTE DO RAND
-    srand((unsigned) time(NULL));
-
-    //DEFINICOES DO FORMULARIO
-    FD_projeto *fd_projeto;
-    fl_initialize( &argc, argv, 0, 0, 0 );
-    fd_projeto = create_form_projeto( );
-    fl_show_form( fd_projeto->projeto, FL_PLACE_CENTERFREE, FL_FULLBORDER, "projeto" );
-    
-    //LOOP DO FORMULARIO
-    fl_do_forms( );
-
-    //FINALIZANDO FORMULARIO
-    if ( fl_form_is_visible( fd_projeto->projeto ) )
-        fl_hide_form( fd_projeto->projeto );
-    fl_free( fd_projeto );
-    fl_finish( );
-
-    return 0;
 }
