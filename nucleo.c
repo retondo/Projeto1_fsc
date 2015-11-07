@@ -5,6 +5,7 @@
 int tempo;
 int trilha;
 char sem[10];
+//lista *bcp = (lista *) malloc(sizeof(lista));
 
 int interruptControl() {
     return rand()%12;
@@ -12,6 +13,10 @@ int interruptControl() {
 
 void nucleo() {
     int sorteio;
+
+    inicializarLista();
+    inicializarThreads();
+    inicializarSemaforos();
 
     while (1) {
         sorteio = interruptControl();
@@ -23,9 +28,11 @@ void nucleo() {
             processInterrupt();
             break;
         case 2:
+            fl_add_browser_line(fdui->log, "Gerenciando bloqueio de semaforo");
             //semaphoreP();
             break;
         case 3:
+            fl_add_browser_line(fdui->log, "Gerenciando liberacao de semaforo");
             //semaphoreV();
             break;
         case 4:
@@ -87,6 +94,39 @@ int sysCall() {
     }
 
     return 0;
+}
+
+void inicializarLista() {
+    fl_add_browser_line(fdui->log, "Inicializando lista de processos...");
+    lista *bcp = (lista *) malloc(sizeof(lista));
+    if(lista_iniciar(bcp))
+        fl_add_browser_line(fdui->log, "Feito.");
+    else {
+        fl_add_browser_line(fdui->log, "Fatal Error: Nao foi possivel criar a lista de processos!!");
+        sleep(2);
+        exit(1);
+    }
+}
+
+void inicializarThreads() {
+    pthread_attr_init(&T_READFILE_ATTR);
+    pthread_attr_init(&T_PROCESS_CREATE_ATTR);
+    pthread_attr_init(&T_PROCESS_FINISH_ATTR);
+    pthread_attr_init(&T_SEMAPHORE_P_ATTR);
+    pthread_attr_init(&T_SEMAPHORE_V_ATTR);
+    pthread_attr_init(&T_ESCALONADOR_ATTR);
+
+    pthread_attr_setscope(&T_READFILE_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_PROCESS_CREATE_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_PROCESS_FINISH_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_SEMAPHORE_P_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_SEMAPHORE_V_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_ESCALONADOR_ATTR, PTHREAD_SCOPE_SYSTEM);
+}
+
+void inicializarSemaforos() {
+    sem_init(&S_LISTA, 1, 1);
+    sem_init(&S_FILE_SELECTOR, 1, 1);
 }
 
 int retornaInteiroDaAcao(char linha[]) {
@@ -163,7 +203,7 @@ int readFile(const char *caminho) {
     return 1;
 }
 
-void criaProcessoBCP(FILE *f) {
+int criaProcessoBCP(FILE *f) {
     // Aloca as informaçoes do processo na memória
     processo_info *pro = (processo_info *) malloc(sizeof(processo_info));
 
@@ -172,7 +212,8 @@ void criaProcessoBCP(FILE *f) {
     int prioridade, i;
 
     // Captura somente o cabeçalho
-    for (i = 0; (fgets(linha, 50, f)) != NULL; i++) {
+    for (i = 0; i <= 5; i++) {
+        fgets(linha, 50, f);
         switch (i) {
         case 0:
             strcpy(nome, linha);
@@ -202,16 +243,18 @@ void criaProcessoBCP(FILE *f) {
 
     // Bloquear semáforo
     // Testa se o processo(programa sintetico) foi devidamente criado
-    if (processCreate(pro))
-        fl_add_browser_line(fdui->log, "Processo criado e inserido no BCP");
-    else
-        fl_add_browser_line(fdui->log, "Nao foi possivel inserir o processo no BCP");
+    if (processCreate(pro)) {
+        fl_add_browser_line_f(fdui->log, "Processo %s criado e inserido no BCP", pro->nome);
+        return 1;
+    } else {
+        fl_add_browser_line_f(fdui->log, "Nao foi possivel inserir o processo %s no BCP", pro->nome);
+        return 0;
+    }
     // Liberar semáforo
-
 }
 
 void processInterrupt() {
-
+    fl_add_browser_line(fdui->log, "Interrupcao");
 }
 
 /*void semaphoreP(char sem) {
@@ -223,32 +266,36 @@ void semaphoreV(char sem) {
 }*/
 
 void ioRequest() {
-    fl_add_browser_line(fdui->log, "E/S requisitada.");
+    fl_add_browser_line(fdui->log, "E/S requisitada");
 }
 
 void ioFinish() {
-    fl_add_browser_line(fdui->log, "E/S finalizada.");
+    fl_add_browser_line(fdui->log, "E/S finalizada");
 }
 
 void memLoadRequest() {
-    fl_add_browser_line(fdui->log, "");
+    fl_add_browser_line(fdui->log, "Carregamento na memoria requisitado");
 }
 
 void memLoadFinish() {
-
+    fl_add_browser_line(fdui->log, "Carregamento na memoria finalizado");
 }
 
 void fsRequest() {
-
+    fl_add_browser_line(fdui->log, "Acesso ao sistema de arquivos requisitado");
 }
 
 void fsFinish() {
-
+    fl_add_browser_line(fdui->log, "Acesso ao sistema de arquivos finalizado");
 }
 
 // Retorna 0 se o processo foi devidamente criado
 int processCreate(processo_info *processo) {
+    /*pthread_attr_t atrib;
+    pthread_t pro;
+    pthread_create(pro, atrib, readFile, 0);*/
 
+    //lista_inserir(bcp, processo);
 
     return 1;
 }

@@ -8,14 +8,16 @@ int lista_vazia(lista *l) {
         return 0;
 }
 
-void lista_iniciar(lista *l) {
+int lista_iniciar(lista *l) {
     // Os argumentos da lista são iniciados como nulos se a lista existir
     if (l) {
         l->inicio = NULL;
         l->fim = NULL;
         l->tam = 0;
+        return 1;
     } else {
         printf("A lista não existe!!");
+        return 0;
     }
 }
 

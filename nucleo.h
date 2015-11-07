@@ -2,8 +2,31 @@
 #define NUCLEO_H_
 
 #include "lista.h"
+#include <pthread.h>
+#include <semaphore.h>
 
-// COMO PEDIDO NO PROJETO, SOMENTE AS FUNÇÕES 2, 3, 10 E 11 FORAM IMPLEMENTADAS
+// DEFINIÇÃO DAS THREADS ==================================================================================================
+pthread_t T_READFILE;
+pthread_t T_PROCESS_CREATE;
+pthread_t T_PROCESS_FINISH;
+pthread_t T_SEMAPHORE_P;
+pthread_t T_SEMAPHORE_V;
+pthread_t T_ESCALONADOR;
+
+pthread_attr_t T_READFILE_ATTR;
+pthread_attr_t T_PROCESS_CREATE_ATTR;
+pthread_attr_t T_PROCESS_FINISH_ATTR;
+pthread_attr_t T_SEMAPHORE_P_ATTR;
+pthread_attr_t T_SEMAPHORE_V_ATTR;
+pthread_attr_t T_ESCALONADOR_ATTR;
+
+// DEFINIÇÃO DOS SEMÁFOROS ================================================================================================
+
+sem_t S_LISTA;
+sem_t S_FILE_SELECTOR;
+
+
+// COMO PEDIDO NO PROJETO, SOMENTE AS FUNÇÕES 2, 3, 10 E 11 FORAM IMPLEMENTADAS ===========================================
 
 int interruptControl();             // Gera os numeros aleatórios
 void processInterrupt();            // 1 - Interrupção gerada pelo final do quantum time de um processo
@@ -15,13 +38,16 @@ void memLoadRequest();              // 6 - Chamada de operação de carregamento
 void memLoadFinish();               // 7 - Sinalização de final de carregamento
 void fsRequest();                   // 8 - Chamada para operação no sistema de arquivos
 void fsFinish();                    // 9 - Sinalização de final de operação no sistema de arquivos
-int processCreate();               // 10 - Chamada para a criação de um processo no BCP
+int processCreate();                // 10 - Chamada para a criação de um processo no BCP
 void processFinish();               // 11 - Chamada para terminar a existência de um processo no BCP
 void exec(int tempo);               // Executa o processo por um tempo determinado
 void read(int trilha);              // Le uma trilha do hd
 void write(int trilha);             // Escreve em uma trilha do hd
-int readFile(const char *caminho);   // Lê as instruções do arquivo sintético
+int readFile(const char *caminho);  // Lê as instruções do arquivo sintético
 int sysCall();                      // Faz as chamadas de sistema de acordo com as intruçoões do programa sintético
-void criaProcessoBCP(FILE *f);      // Lê o cabeçalho do arquivo sintético e cria seu processo no BCP
+int criaProcessoBCP(FILE *f);       // Lê o cabeçalho do arquivo sintético e cria seu processo no BCP
+void inicializarLista();
+void inicializarThreads();
+void inicializarSemaforos();
 
 #endif
