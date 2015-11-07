@@ -8,11 +8,11 @@
 #define PROCESSO_ESPERANDO 4;
 
 typedef struct {
-    char nome[30];
+    char *nome;
     long segmento_id;
     int prioridade;
     long segmento_tam;
-    char semaforos[10];
+    char *semaforos;
 } processo_info;
 
 #endif

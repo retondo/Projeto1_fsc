@@ -18,13 +18,6 @@ void prgs_callback(FL_OBJECT *obj, long user_data) {
 
 }
 
-/*void prgsAuto_callback(FL_OBJECT *obj, long user_data) {
-    FD_projeto *fdui = obj->form->fdui;
-    //const char *fname;
-    fname = fl_show_file_selector( "File To Load", "", "", "" );
-    printf("%s", fname);
-}*/
-
 void sorteio_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
     char num[100];

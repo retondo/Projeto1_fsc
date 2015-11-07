@@ -17,7 +17,7 @@ typedef struct Lista {
 } lista;
 
 void lista_iniciar(lista *l);
-void lista_inserir(lista *l, no *elemento);
+void lista_inserir(lista *l, processo_info *elemento);
 void lista_remover(lista *l, no *elemento);
 void imprimir_lista(lista *l);
 int lista_vazia(lista *l);

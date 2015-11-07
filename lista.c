@@ -1,11 +1,11 @@
 #include "lista.h"
 
-// Retorna 0 se vazia, senão retorna 1
+// Retorna 1 se vazia, senão retorna 0
 int lista_vazia(lista *l) {
     if (l->inicio == NULL)
-        return 0;
-    else
         return 1;
+    else
+        return 0;
 }
 
 void lista_iniciar(lista *l) {
@@ -19,11 +19,11 @@ void lista_iniciar(lista *l) {
     }
 }
 
-void lista_inserir(lista *l, no *elemento) {
+void lista_inserir(lista *l, processo_info *elemento) {
     // Alocando o nó novo na memória
     no *novo = (no *) malloc(sizeof(no));
     // Apontando o nó novo para o nó elemento
-    novo = elemento;
+    novo->info = elemento;
 
     // Insere no começo
     // Se a lista estiver vazia insere o nó novo
