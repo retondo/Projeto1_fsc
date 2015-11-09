@@ -40,12 +40,15 @@ void lista_inserir(lista *l, processo_info *elemento) {
         atual = l->inicio;
 
         // Percorre a lista até achar o nó de menor prioridade (0 tem maior prioridade) ou até achar o fim
-        while(novo->info->prioridade >= atual->info->prioridade && atual != NULL) {
+        while(novo->info->prioridade >= atual->info->prioridade) {
             anterior = atual;
             atual = atual->prox;
+            if (atual == NULL)
+                break;
         }
         // Insere no meio ou no fim e atualiza o tamanho da lista
-        anterior->prox = novo;
+        if (anterior != NULL)
+            anterior->prox = novo;
         novo->prox = atual;
         l->tam++;
 

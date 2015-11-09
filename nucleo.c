@@ -2,8 +2,7 @@
 #include "interface.h"
 #include <string.h>
 
-int tempo;
-int trilha;
+int tempo, trilha, i = 0;
 char sem[10];
 
 int interruptControl() {
@@ -17,6 +16,8 @@ void nucleo() {
     inicializarThreads();
     inicializarSemaforos();
 
+    //pthread_create(&T_ESCALONADOR, &T_ESCALONADOR_ATTR, (void *) &escalonador, NULL);
+
     while (1) {
         sorteio = interruptControl();
         switch (sorteio) {
@@ -24,20 +25,20 @@ void nucleo() {
             sysCall();
             break;
         case 2:
-            fl_add_browser_line(fdui->log, "Gerenciando bloqueio de semaforo");
+            //fl_add_browser_line(fdui->log, "Gerenciando bloqueio de semaforo");
             //pthread_create(&T_SEMAPHORE_P, &T_SEMAPHORE_P_ATTR, (void *) &semaphoreP, NULL);
             break;
         case 3:
-            fl_add_browser_line(fdui->log, "Gerenciando liberacao de semaforo");
+            //fl_add_browser_line(fdui->log, "Gerenciando liberacao de semaforo");
             //pthread_create(&T_SEMAPHORE_V, &T_SEMAPHORE_V_ATTR, (void *) &semaphoreV, NULL);
             break;
         case 10:
-            fl_add_browser_line_f(fdui->log, "Criando processo no BCP");
-            selecionaArquivo();
-            pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
+            //fl_add_browser_line_f(fdui->log, "Criando processo no BCP");
+            //selecionaArquivo();
+            //pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
             break;
         case 11:
-            pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
+            //pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
             break;
         default:
             break;
@@ -45,13 +46,8 @@ void nucleo() {
     }
 }
 
-int sysCall() {
-    int num;
-
-    selecionaArquivo();
-    pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, fname);
-    num = readFile(fname);
-    switch(num) {
+void executarInstrucao(int instrucao) {
+    switch(instrucao) {
     case 1:
         //exec(tempo);
         break;
@@ -62,32 +58,22 @@ int sysCall() {
         write(trilha);
         break;
     case 4:
-        //semaphoreP(sem);
+        //call();
         break;
     case 5:
-        //semaphoreV(sem);
+        //semaphoreP(sem);
         break;
+    case 6:
+        //semaphoreV;
     default:
         break;
     }
-
-    return 0;
 }
 
-void gerenciaInterrupcao() {
-
-}
-
-int retornaInteiroDaAcao(char linha[]) {
-    int k = 1, j = 0;
-    char n[10];
-    while (linha[k] != '\n') {
-        while (linha[k] != ' ')
-            k++;
-        n[j] = linha[k+1];
-        j++;
-    }
-    return (atoi(n));
+void sysCall() {
+    selecionaArquivo();
+    pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, (void *) retornaProcesso());
+    pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, (void *) fname);
 }
 
 processo_info *retornaProcesso() {
@@ -123,11 +109,12 @@ processo_info *retornaProcesso() {
 
     fclose(f);
 
-    pro->nome = nome;
+    strcpy(pro->nome, nome);
     pro->segmento_id = seg_id;
     pro->prioridade = prioridade;
     pro->segmento_tam = seg_tam;
-    pro->semaforos = sem;
+    strcpy(pro->semaforos, sem);
+    strcpy(pro->caminho, fname);
 
     return pro;
 }
@@ -141,87 +128,51 @@ void selecionaArquivo() {
             fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!");
             selecionaArquivo();
     }
+
 }
 
-int readFile(const char *caminho) {
+void readFile(const char *caminho) {
     FILE *file;
+    char acao[15], linha;
+    int i;
 
     if (!(file = fopen(caminho, "r"))) {
         fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!\nPor favor, selecione um arquivo valido.");
-        sysCall();
     } else {
-        processCreate(retornaProcesso());
-
         // Captura somente o cabeçalho
-        /*for (i = 0; (fgets(linha, 50, f)) != NULL; i++) {
-            switch (i) {
-            case 0:
-                strcpy(nome, linha);
-                break;
-            case 1:
-                seg_id = atol(linha);
-                break;
-            case 2:
-                prioridade = atoi(linha);
-                break;
-            case 3:
-                seg_tam = atol(linha);
-                break;
-            case 4:
-                strcpy(sem, linha);
-                break;
-            //if (linha[0] == '\n')
-                //break;
-            if (linha[0] == 'e'):
-                // Chama a ação lida
-                exec(retornaInteiroDaAcao(linha));
-                break;
-            case (linha[0] == 'r'):
-                read(retornaInteiroDaAcao(linha));
-                break;
-            case (linha[0] == 'w'):
-                write(retornaInteiroDaAcao(linha));
-                break;
-                // Tratar o nome do processo a ser chamado
-            case (linha[0] == 'c'):
-                call(retornaInteiroDaAcao(linha));
-                break;
-            case (linha[0] == 'P'):
-                semaphoreP();
-                break;
-            case (linha[0] == 'V'):
-                semaphoreV();
-                break;
-            default:
-                // iserir callback
-                printf("%s", linha);
-                break;
-             }
-        }*/
-
-
-
+        for (i = 0; !feof(file); i++) {
+            if (i >= 6) {
+                linha = fgetc(file);
+                if (linha == 'e') {
+                    fscanf(file, "%s %i\n", acao, &tempo);
+                    executarInstrucao(1);
+                } else if (linha == 'r') {
+                    fscanf(file, "%s %i\n", acao, &trilha);
+                    executarInstrucao(2);
+                } else if (linha == 'w') {
+                    fscanf(file, "%s %i\n", acao, &trilha);
+                    executarInstrucao(3);
+                } else if (linha == 'c') {
+                    fscanf(file, "all(%s)\n", acao);
+                    executarInstrucao(4);
+                } else if (linha == 'P') {
+                    fscanf(file, "(%c)\n", acao);
+                    executarInstrucao(5);
+                } else if (linha == 'V') {
+                    fscanf(file, "(%c)\n", acao);
+                    executarInstrucao(6);
+                }
+            }
+        }
+        // Finaliza o processo
+        fl_add_browser_line_f(fdui->log, "Processo %s finalizado", bcp->inicio->info->nome);
+        processFinish(bcp->inicio);
     }
-    return 1;
 }
 
-/*int criaProcessoBCP(FILE *f) {
-    // Aloca as informaçoes do processo na memória
+void escalonador() {
 
-
-    // Bloquear semáforo
-    // Testa se o processo(programa sintetico) foi devidamente criado
-    if (processCreate(pro)) {
-        fl_add_browser_line_f(fdui->log, "Processo %s criado e inserido no BCP", pro->nome);
-        return 1;
-    } else {
-        fl_add_browser_line_f(fdui->log, "Nao foi possivel inserir o processo %s no BCP", pro->nome);
-        return 0;
-    }
-    // Liberar semáforo
-}*/
-
-
+}
 
 /*void semaphoreP(char sem) {
 
@@ -231,31 +182,29 @@ void semaphoreV(char sem) {
 
 }*/
 
-// Retorna 0 se o processo foi devidamente criado
-int processCreate(processo_info *processo) {
+void processCreate(processo_info *processo) {
     sem_wait(&S_LISTA);
     lista_inserir(bcp, processo);
     sem_post(&S_LISTA);
-
-    return 1;
 }
 
-void processFinish() {
-
+void processFinish(no *processo) {
+    sem_wait(&S_LISTA);
+    lista_remover(bcp, processo);
+    sem_post(&S_LISTA);
 }
 
 /*void exec(int tempo) {
 
-}
+}*/
 
 void read(int trilha) {
-
+    fl_add_browser_line_f(fdui->log, "Trilha %i lida", trilha);
 }
 
 void write(int trilha) {
-
+    fl_add_browser_line_f(fdui->log, "Dados escritos na trilha %i", trilha);
 }
-*/
 
 void inicializarLista() {
     fl_add_browser_line(fdui->log, "Inicializando lista de processos...");

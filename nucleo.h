@@ -41,19 +41,19 @@ void memLoadRequest();                          // 6 - Chamada de operação de 
 void memLoadFinish();                           // 7 - Sinalização de final de carregamento
 void fsRequest();                               // 8 - Chamada para operação no sistema de arquivos
 void fsFinish();                                // 9 - Sinalização de final de operação no sistema de arquivos
-int processCreate(processo_info *processo);     // 10 - Chamada para a criação de um processo no BCP
-void processFinish();                           // 11 - Chamada para terminar a execução de um processo no BCP
+void processCreate(processo_info *processo);    // 10 - Chamada para a criação de um processo no BCP
+void processFinish(no *processo);                           // 11 - Chamada para terminar a execução de um processo no BCP
 void exec(int tempo);                           // Executa o processo por um tempo determinado
 void read(int trilha);                          // Le uma trilha do hd
 void write(int trilha);                         // Escreve em uma trilha do hd
-int readFile(const char *caminho);              // Lê as instruções do arquivo sintético
-int sysCall();                                  // Faz as chamadas de sistema de acordo com as intruçoões do programa sintético
-int criaProcessoBCP(FILE *f);                   // Lê o cabeçalho do arquivo sintético e cria seu processo no BCP
+void readFile(const char *caminho);              // Lê as instruções do arquivo sintético
+void sysCall();                                  // Faz as chamadas de sistema de acordo com as intruçoões do programa sintético
 void inicializarLista();
 void inicializarThreads();
 void inicializarSemaforos();
 void selecionaArquivo();
 void nucleo();
+void escalonador();
 processo_info *retornaProcesso();
 
 #endif
