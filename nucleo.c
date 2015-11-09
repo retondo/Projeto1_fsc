@@ -5,7 +5,6 @@
 int tempo;
 int trilha;
 char sem[10];
-//lista *bcp = (lista *) malloc(sizeof(lista));
 
 int interruptControl() {
     return rand()%12;
@@ -54,7 +53,8 @@ void nucleo() {
             fsFinish();
             break;
         case 10:
-            processCreate();
+            selecionaArquivo();
+            processCreate(retornaProcesso());
             break;
         case 11:
             processFinish();
@@ -68,10 +68,7 @@ void nucleo() {
 int sysCall() {
     int num;
 
-    // Chama o File Selector que retorna o caminho do arquivo selecionado
-    // TODO: Inserir semáforo
-    fname = fl_show_file_selector( "Selecione o arquivo sintetico", "", "", "" );
-    // TODO: Liberar semáforo
+    selecionaArquivo();
     num = readFile(fname);
     switch(num) {
     case 1:
@@ -96,38 +93,11 @@ int sysCall() {
     return 0;
 }
 
-void inicializarLista() {
-    fl_add_browser_line(fdui->log, "Inicializando lista de processos...");
-    lista *bcp = (lista *) malloc(sizeof(lista));
-    if(lista_iniciar(bcp))
-        fl_add_browser_line(fdui->log, "Feito.");
-    else {
-        fl_add_browser_line(fdui->log, "Fatal Error: Nao foi possivel criar a lista de processos!!");
-        sleep(2);
-        exit(1);
-    }
+void gerenciaInterrupcao() {
+
 }
 
-void inicializarThreads() {
-    pthread_attr_init(&T_READFILE_ATTR);
-    pthread_attr_init(&T_PROCESS_CREATE_ATTR);
-    pthread_attr_init(&T_PROCESS_FINISH_ATTR);
-    pthread_attr_init(&T_SEMAPHORE_P_ATTR);
-    pthread_attr_init(&T_SEMAPHORE_V_ATTR);
-    pthread_attr_init(&T_ESCALONADOR_ATTR);
 
-    pthread_attr_setscope(&T_READFILE_ATTR, PTHREAD_SCOPE_SYSTEM);
-    pthread_attr_setscope(&T_PROCESS_CREATE_ATTR, PTHREAD_SCOPE_SYSTEM);
-    pthread_attr_setscope(&T_PROCESS_FINISH_ATTR, PTHREAD_SCOPE_SYSTEM);
-    pthread_attr_setscope(&T_SEMAPHORE_P_ATTR, PTHREAD_SCOPE_SYSTEM);
-    pthread_attr_setscope(&T_SEMAPHORE_V_ATTR, PTHREAD_SCOPE_SYSTEM);
-    pthread_attr_setscope(&T_ESCALONADOR_ATTR, PTHREAD_SCOPE_SYSTEM);
-}
-
-void inicializarSemaforos() {
-    sem_init(&S_LISTA, 1, 1);
-    sem_init(&S_FILE_SELECTOR, 1, 1);
-}
 
 int retornaInteiroDaAcao(char linha[]) {
     int k = 1, j = 0;
@@ -141,14 +111,62 @@ int retornaInteiroDaAcao(char linha[]) {
     return (atoi(n));
 }
 
-int readFile(const char *caminho) {
-    FILE *f;
+processo_info *retornaProcesso() {
+    processo_info *pro = (processo_info *) malloc(sizeof(processo_info));
 
-    if (!(f = fopen(caminho, "rt"))) {
+    char nome[30], sem[10], linha[50];
+    long seg_id, seg_tam;
+    int prioridade, i;
+
+    // Captura somente o cabeçalho
+    for (i = 0; i <= 5; i++) {
+        fgets(linha, 50, f);
+        switch (i) {
+        case 0:
+            strcpy(nome, linha);
+            break;
+        case 1:
+            seg_id = atol(linha);
+            break;
+        case 2:
+            prioridade = atoi(linha);
+            break;
+        case 3:
+            seg_tam = atol(linha);
+            break;
+        case 4:
+            strcpy(sem, linha);
+            break;
+        default:
+            break;
+        }
+    }
+
+    pro->nome = nome;
+    pro->segmento_id = seg_id;
+    pro->prioridade = prioridade;
+    pro->segmento_tam = seg_tam;
+    pro->semaforos = sem;
+
+    return pro;
+}
+
+void selecionaArquivo() {
+    // Chama o File Selector que retorna o caminho do arquivo selecionado
+    sem_wait(&S_FILE_SELECTOR);
+    fname = fl_show_file_selector( "Selecione o arquivo sintetico", "", "", "" );
+    sem_post(&S_FILE_SELECTOR);
+
+    f = fopen(fname, "r");
+}
+
+int readFile(const char *caminho) {
+
+    if (!(f = fopen(caminho, "r"))) {
         fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!\nPor favor, selecione um arquivo valido.");
         sysCall();
     } else {
-        criaProcessoBCP(f);
+        processCreate(retornaProcesso());
 
         // Captura somente o cabeçalho
         /*for (i = 0; (fgets(linha, 50, f)) != NULL; i++) {
@@ -203,43 +221,9 @@ int readFile(const char *caminho) {
     return 1;
 }
 
-int criaProcessoBCP(FILE *f) {
+/*int criaProcessoBCP(FILE *f) {
     // Aloca as informaçoes do processo na memória
-    processo_info *pro = (processo_info *) malloc(sizeof(processo_info));
 
-    char nome[30], sem[10], linha[50];
-    long seg_id, seg_tam;
-    int prioridade, i;
-
-    // Captura somente o cabeçalho
-    for (i = 0; i <= 5; i++) {
-        fgets(linha, 50, f);
-        switch (i) {
-        case 0:
-            strcpy(nome, linha);
-            break;
-        case 1:
-            seg_id = atol(linha);
-            break;
-        case 2:
-            prioridade = atoi(linha);
-            break;
-        case 3:
-            seg_tam = atol(linha);
-            break;
-        case 4:
-            strcpy(sem, linha);
-            break;
-        default:
-            break;
-        }
-    }
-
-    pro->nome = nome;
-    pro->segmento_id = seg_id;
-    pro->prioridade = prioridade;
-    pro->segmento_tam = seg_tam;
-    pro->semaforos = sem;
 
     // Bloquear semáforo
     // Testa se o processo(programa sintetico) foi devidamente criado
@@ -251,7 +235,7 @@ int criaProcessoBCP(FILE *f) {
         return 0;
     }
     // Liberar semáforo
-}
+}*/
 
 void processInterrupt() {
     fl_add_browser_line(fdui->log, "Interrupcao");
@@ -291,11 +275,9 @@ void fsFinish() {
 
 // Retorna 0 se o processo foi devidamente criado
 int processCreate(processo_info *processo) {
-    /*pthread_attr_t atrib;
-    pthread_t pro;
-    pthread_create(pro, atrib, readFile, 0);*/
-
-    //lista_inserir(bcp, processo);
+    sem_wait(&S_LISTA);
+    lista_inserir(bcp, processo);
+    sem_post(&S_LISTA);
 
     return 1;
 }
@@ -317,6 +299,37 @@ void write(int trilha) {
 }
 */
 
+void inicializarLista() {
+    fl_add_browser_line(fdui->log, "Inicializando lista de processos...");
+    bcp = (lista *) malloc(sizeof(lista));
+    if(lista_iniciar(bcp))
+        fl_add_browser_line(fdui->log, "Feito.");
+    else {
+        fl_add_browser_line(fdui->log, "Fatal Error: Nao foi possivel criar a lista de processos!!");
+        exit(1);
+    }
+}
+
+void inicializarThreads() {
+    pthread_attr_init(&T_READFILE_ATTR);
+    pthread_attr_init(&T_PROCESS_CREATE_ATTR);
+    pthread_attr_init(&T_PROCESS_FINISH_ATTR);
+    pthread_attr_init(&T_SEMAPHORE_P_ATTR);
+    pthread_attr_init(&T_SEMAPHORE_V_ATTR);
+    pthread_attr_init(&T_ESCALONADOR_ATTR);
+
+    pthread_attr_setscope(&T_READFILE_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_PROCESS_CREATE_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_PROCESS_FINISH_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_SEMAPHORE_P_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_SEMAPHORE_V_ATTR, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setscope(&T_ESCALONADOR_ATTR, PTHREAD_SCOPE_SYSTEM);
+}
+
+void inicializarSemaforos() {
+    sem_init(&S_LISTA, 1, 1);
+    sem_init(&S_FILE_SELECTOR, 1, 1);
+}
 
 
 

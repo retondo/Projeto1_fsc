@@ -13,6 +13,7 @@ typedef struct {
     int prioridade;
     long segmento_tam;
     char *semaforos;
+    const char *caminho;
 } processo_info;
 
 #endif

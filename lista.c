@@ -28,7 +28,7 @@ void lista_inserir(lista *l, processo_info *elemento) {
     novo->info = elemento;
 
     // Insere no começo
-    // Se a lista estiver vazia insere o nó novo
+    // Se a lista estiver vazia insere o novo nó
     if (lista_vazia(l)) {
         l->inicio = novo;
         l->fim = novo;
@@ -48,6 +48,10 @@ void lista_inserir(lista *l, processo_info *elemento) {
         anterior->prox = novo;
         novo->prox = atual;
         l->tam++;
+
+        // Atualiza o inicio
+        if (l->inicio == atual)
+            l->inicio = novo;
 
         // Atualiza o fim da lista
         if (novo->prox == NULL)
@@ -81,7 +85,7 @@ void imprimir_lista(lista *l) {
         n = n->prox;
     }
 
-    free(n);
+    //free(n);
 }
 
 

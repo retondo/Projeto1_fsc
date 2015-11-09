@@ -5,9 +5,9 @@ CONFIG -= qt
 
 SOURCES += \
     nucleo.c \
-    projeto_main.c \
     lista.c \
-    interface.c
+    interface.c \
+    main.c
 
 HEADERS += \
     nucleo.h \
@@ -16,4 +16,5 @@ HEADERS += \
     interface.h
 
 LIBS += /usr/local/lib/libforms.so \
-/usr/local/lib/libforms.so.2
+/usr/local/lib/libforms.so.2 \
+/lib/x86_64-linux-gnu/libpthread.so.0
