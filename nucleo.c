@@ -23,41 +23,21 @@ void nucleo() {
         case 0:
             sysCall();
             break;
-        case 1:
-            processInterrupt();
-            break;
         case 2:
             fl_add_browser_line(fdui->log, "Gerenciando bloqueio de semaforo");
-            //semaphoreP();
+            //pthread_create(&T_SEMAPHORE_P, &T_SEMAPHORE_P_ATTR, (void *) &semaphoreP, NULL);
             break;
         case 3:
             fl_add_browser_line(fdui->log, "Gerenciando liberacao de semaforo");
-            //semaphoreV();
-            break;
-        case 4:
-            ioRequest();
-            break;
-        case 5:
-            ioFinish();
-            break;
-        case 6:
-            memLoadRequest();
-            break;
-        case 7:
-            memLoadFinish();
-            break;
-        case 8:
-            fsRequest();
-            break;
-        case 9:
-            fsFinish();
+            //pthread_create(&T_SEMAPHORE_V, &T_SEMAPHORE_V_ATTR, (void *) &semaphoreV, NULL);
             break;
         case 10:
+            fl_add_browser_line_f(fdui->log, "Criando processo no BCP");
             selecionaArquivo();
-            processCreate(retornaProcesso());
+            pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
             break;
         case 11:
-            processFinish();
+            pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
             break;
         default:
             break;
@@ -69,6 +49,7 @@ int sysCall() {
     int num;
 
     selecionaArquivo();
+    pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, fname);
     num = readFile(fname);
     switch(num) {
     case 1:
@@ -96,8 +77,6 @@ int sysCall() {
 void gerenciaInterrupcao() {
 
 }
-
-
 
 int retornaInteiroDaAcao(char linha[]) {
     int k = 1, j = 0;
@@ -142,6 +121,8 @@ processo_info *retornaProcesso() {
         }
     }
 
+    fclose(f);
+
     pro->nome = nome;
     pro->segmento_id = seg_id;
     pro->prioridade = prioridade;
@@ -156,13 +137,16 @@ void selecionaArquivo() {
     sem_wait(&S_FILE_SELECTOR);
     fname = fl_show_file_selector( "Selecione o arquivo sintetico", "", "", "" );
     sem_post(&S_FILE_SELECTOR);
-
-    f = fopen(fname, "r");
+    if (!(f = fopen(fname, "r"))) {
+            fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!");
+            selecionaArquivo();
+    }
 }
 
 int readFile(const char *caminho) {
+    FILE *file;
 
-    if (!(f = fopen(caminho, "r"))) {
+    if (!(file = fopen(caminho, "r"))) {
         fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!\nPor favor, selecione um arquivo valido.");
         sysCall();
     } else {
@@ -237,9 +221,7 @@ int readFile(const char *caminho) {
     // Liberar semáforo
 }*/
 
-void processInterrupt() {
-    fl_add_browser_line(fdui->log, "Interrupcao");
-}
+
 
 /*void semaphoreP(char sem) {
 
@@ -248,30 +230,6 @@ void processInterrupt() {
 void semaphoreV(char sem) {
 
 }*/
-
-void ioRequest() {
-    fl_add_browser_line(fdui->log, "E/S requisitada");
-}
-
-void ioFinish() {
-    fl_add_browser_line(fdui->log, "E/S finalizada");
-}
-
-void memLoadRequest() {
-    fl_add_browser_line(fdui->log, "Carregamento na memoria requisitado");
-}
-
-void memLoadFinish() {
-    fl_add_browser_line(fdui->log, "Carregamento na memoria finalizado");
-}
-
-void fsRequest() {
-    fl_add_browser_line(fdui->log, "Acesso ao sistema de arquivos requisitado");
-}
-
-void fsFinish() {
-    fl_add_browser_line(fdui->log, "Acesso ao sistema de arquivos finalizado");
-}
 
 // Retorna 0 se o processo foi devidamente criado
 int processCreate(processo_info *processo) {
@@ -331,7 +289,33 @@ void inicializarSemaforos() {
     sem_init(&S_FILE_SELECTOR, 1, 1);
 }
 
+void ioRequest() {
+    // NÃO IMPLEMENTADA
+}
 
+void ioFinish() {
+    // NÃO IMPLEMENTADA
+}
+
+void memLoadRequest() {
+    // NÃO IMPLEMENTADA
+}
+
+void memLoadFinish() {
+    // NÃO IMPLEMENTADA
+}
+
+void fsRequest() {
+    // NÃO IMPLEMENTADA
+}
+
+void fsFinish() {
+    // NÃO IMPLEMENTADA
+}
+
+void processInterrupt() {
+    // NÃO IMPLEMENTADA
+}
 
 
 
