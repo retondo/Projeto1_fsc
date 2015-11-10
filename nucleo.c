@@ -6,20 +6,39 @@ int tempo, trilha, i = 0;
 char sem[10];
 
 int interruptControl() {
-    return rand()%12;
+    return (rand()%11)+1;
 }
 
 void nucleo() {
-    int sorteio;
 
     inicializarLista();
     inicializarThreads();
     inicializarSemaforos();
 
-    //pthread_create(&T_ESCALONADOR, &T_ESCALONADOR_ATTR, (void *) &escalonador, NULL);
+    escalonador();
+
+    //selecionaArquivo();
+    //pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
+    //gerenciaInterrupcoes();
+}
+
+void gerenciaInterrupcoes() {
+    int sorteio;
+
+    fl_add_browser_line_f(fdui->acontecimentos, "Por favor, \ncarregue um arquivo sintetico.");
+    while(!callback_carregar_sint_chamada || !arquivo_escolhido){
+        usleep(200);
+        printf("valor do fui_chamda %d valor da primeira_vez %d\n", callback_carregar_sint_chamada, arquivo_escolhido);
+    }
 
     while (1) {
         sorteio = interruptControl();
+        fl_add_browser_line_f(fdui->acontecimentos, "Sorteio: %i", sorteio);
+        fl_set_browser_bottomline(fdui->acontecimentos, 1000);
+        fflush(stdout);
+        if(cria_processos_chamada){
+            sorteio=0;
+        }
         switch (sorteio) {
         case 0:
             sysCall();
@@ -33,9 +52,11 @@ void nucleo() {
             //pthread_create(&T_SEMAPHORE_V, &T_SEMAPHORE_V_ATTR, (void *) &semaphoreV, NULL);
             break;
         case 10:
-            //fl_add_browser_line_f(fdui->log, "Criando processo no BCP");
-            //selecionaArquivo();
-            //pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
+            if(fname){
+                f = fopen(fname, "r");
+                pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
+                pthread_join(T_PROCESS_CREATE, NULL);
+            }
             break;
         case 11:
             //pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
@@ -43,6 +64,7 @@ void nucleo() {
         default:
             break;
         }
+        sleep(1);
     }
 }
 
@@ -72,8 +94,10 @@ void executarInstrucao(int instrucao) {
 
 void sysCall() {
     selecionaArquivo();
-    pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, (void *) retornaProcesso());
-    pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, (void *) fname);
+    //pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, (void *) retornaProcesso());
+    //pthread_join(&T_PROCESS_CREATE, (void **) &ch);
+    processCreate(retornaProcesso());
+    //pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, (void *) bcp->inicio->info->caminho);
 }
 
 processo_info *retornaProcesso() {
@@ -122,7 +146,8 @@ processo_info *retornaProcesso() {
 void selecionaArquivo() {
     // Chama o File Selector que retorna o caminho do arquivo selecionado
     sem_wait(&S_FILE_SELECTOR);
-    fname = fl_show_file_selector( "Selecione o arquivo sintetico", "", "", "" );
+    //fname = fl_show_file_selector( "Selecione o arquivo sintetico", "", "", "" );
+    prgs_callback(fdui->carregar, 0);
     sem_post(&S_FILE_SELECTOR);
     if (!(f = fopen(fname, "r"))) {
             fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!");
@@ -171,7 +196,12 @@ void readFile(const char *caminho) {
 }
 
 void escalonador() {
-
+    while (1) {
+        sleep(2);
+        //sem_wait(&S_FILE_SELECTOR);
+        gerenciaInterrupcoes();
+        //sem_post(&S_FILE_SELECTOR);
+    }
 }
 
 /*void semaphoreP(char sem) {
@@ -185,17 +215,21 @@ void semaphoreV(char sem) {
 void processCreate(processo_info *processo) {
     sem_wait(&S_LISTA);
     lista_inserir(bcp, processo);
+    fl_add_browser_line_f(fdui->log, "Processo %s criado no BCP", processo->nome);
+    imprimir_lista(bcp);
     sem_post(&S_LISTA);
 }
 
 void processFinish(no *processo) {
     sem_wait(&S_LISTA);
     lista_remover(bcp, processo);
+    fl_add_browser_line_f(fdui->log, "Processo %s excluido do BCP", processo->info->nome);
+    imprimir_lista(bcp);
     sem_post(&S_LISTA);
 }
 
 /*void exec(int tempo) {
-
+ *
 }*/
 
 void read(int trilha) {

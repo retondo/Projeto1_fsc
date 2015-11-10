@@ -4,16 +4,21 @@
 //****************************************************************************
 //*********************** CALLBACK DOS BOTOES DO FORMULARIO *******************
 //****************************************************************************
+int callback_carregar_sint_chamada=0;
+int arquivo_escolhido = 0;
 
 void prgs_callback(FL_OBJECT *obj, long user_data) {
-    FD_projeto *fdui = obj->form->fdui;
+    fdui = obj->form->fdui;
+    callback_carregar_sint_chamada=1;
     //const char *fname;
     if ( ( fname = fl_show_file_selector( "File To Load", "", "", "" ) ) )
     {
         if ( ! fl_load_browser( fdui->dados_programas, fname ) )
             fl_add_browser_line( fdui->dados_programas,"NO SUCH FILE!" );
         else
-            fl_add_browser_line( fdui->acontecimentos,  "Programa Carregado");            
+            fl_add_browser_line( fdui->acontecimentos,  "Programa Carregado");
+            arquivo_escolhido=1;
+
     }
 
 }
@@ -33,6 +38,7 @@ void limpar_callback(FL_OBJECT *obj, long user_data) {
 void cria_processo_callback(FL_OBJECT *obj, long user_data) {
     FD_projeto *fdui = obj->form->fdui;
     fl_add_browser_line( fdui->acontecimentos, "Funcao ainda nao implementada" );
+    cria_processos_chamada = 1;
 }
 
 

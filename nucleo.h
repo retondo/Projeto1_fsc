@@ -55,5 +55,10 @@ void selecionaArquivo();
 void nucleo();
 void escalonador();
 processo_info *retornaProcesso();
+void gerenciaInterrupcoes();
+
+//mostra que é a primeira iteraçao do nucleo e deve chamar primeiro a syscall()
+int primeira_vez;
+
 
 #endif

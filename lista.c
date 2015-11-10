@@ -1,4 +1,5 @@
 #include "lista.h"
+#include "interface.h"
 
 // Retorna 1 se vazia, senão retorna 0
 int lista_vazia(lista *l) {
@@ -84,7 +85,7 @@ void imprimir_lista(lista *l) {
     n = l->inicio;
 
     while(n != NULL) {
-        printf("%i\n", n->info->prioridade);
+        fl_add_browser_line_f(fdui->dados_programas, "%i\n", n->info->prioridade);
         n = n->prox;
     }
 

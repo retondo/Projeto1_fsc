@@ -6,6 +6,9 @@ int main(int argc, char * argv[]) {
     //DEFININDO SEMENTE DO RAND
     srand(time(NULL));
 
+    cria_processos_chamada=0;
+    primeira_vez=1;
+
     //DEFINICOES DO FORMULARIO
     FD_projeto *fd_projeto;
     fl_initialize( &argc, argv, 0, 0, 0 );
@@ -15,9 +18,11 @@ int main(int argc, char * argv[]) {
 
     //INSERIR NUCLEO AQUI
 
+    pthread_create(&T_ESCALONADOR, &T_ESCALONADOR_ATTR, (void *) &nucleo, NULL);
+
     //LOOP DO FORMULARIO
-    nucleo();
     fl_do_forms( );
+
 
     //FINALIZANDO FORMULARIO
     if ( fl_form_is_visible( fd_projeto->projeto ) )
