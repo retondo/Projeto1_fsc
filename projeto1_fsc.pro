@@ -18,4 +18,5 @@ HEADERS += \
 LIBS += /usr/local/lib/libforms.so \
 /usr/local/lib/libforms.so.2 \
 /usr/local/lib/libforms.so.2.1.3 \
-/lib/x86_64-linux-gnu/libpthread.so.0
+/lib/x86_64-linux-gnu/libpthread.so.0 \
+/usr/lib/x86_64-linux-gnu/libX11.so

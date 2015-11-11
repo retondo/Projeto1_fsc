@@ -35,8 +35,8 @@ void lista_inserir(lista *l, processo_info *elemento) {
         l->fim = novo;
         l->tam++;
     } else {
-        no *atual = (no *) malloc(sizeof(no));
-        no *anterior = (no *) malloc(sizeof(no));
+        no *atual;
+        no *anterior;
         anterior = NULL;
         atual = l->inicio;
 
@@ -63,29 +63,31 @@ void lista_inserir(lista *l, processo_info *elemento) {
     }
 }
 
-void lista_remover(lista *l, no *elemento) {
+void lista_remover(lista *l) {
     // Aloca o nó excluir na memória
-    no *excluir = (no *) malloc(sizeof(no));
-    excluir = elemento;
+    no *excluir;
+    excluir = l->inicio;
 
     // Exclui o nó da lista e atualiza a lista
-    if (l->inicio == excluir && l->fim == excluir) {
+    if (l->fim == excluir) {
         l->inicio = NULL;
         l->fim = NULL;
         l->tam = 0;
-    } else if (l->inicio == excluir) {
-        l->inicio = excluir->prox;
+    } else {
+        l->inicio = l->inicio->prox;
         l->tam--;
     }
     free(excluir);
 }
 
 void imprimir_lista(lista *l) {
-    no *n = (no *) malloc(sizeof(no));
+    no *n;
     n = l->inicio;
 
+    fl_clear_browser(fdui->dados_programas);
+
     while(n != NULL) {
-        fl_add_browser_line_f(fdui->dados_programas, "%i\n", n->info->prioridade);
+        fl_add_browser_line_f(fdui->dados_programas, "%i", n->info->prioridade);
         n = n->prox;
     }
 

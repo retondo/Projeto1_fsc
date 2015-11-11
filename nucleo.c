@@ -15,30 +15,26 @@ void nucleo() {
     inicializarThreads();
     inicializarSemaforos();
 
-    escalonador();
-
-    //selecionaArquivo();
-    //pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
-    //gerenciaInterrupcoes();
+    pthread_create(&T_ESCALONADOR, &T_ESCALONADOR_ATTR, (void *) &escalonador, NULL);
+    gerenciaInterrupcoes();
 }
 
 void gerenciaInterrupcoes() {
     int sorteio;
 
     fl_add_browser_line_f(fdui->acontecimentos, "Por favor, \ncarregue um arquivo sintetico.");
-    while(!callback_carregar_sint_chamada || !arquivo_escolhido){
+    while (!callback_carregar_sint_chamada || !arquivo_escolhido)
         usleep(200);
-        printf("valor do fui_chamda %d valor da primeira_vez %d\n", callback_carregar_sint_chamada, arquivo_escolhido);
-    }
 
     while (1) {
         sorteio = interruptControl();
-        fl_add_browser_line_f(fdui->acontecimentos, "Sorteio: %i", sorteio);
-        fl_set_browser_bottomline(fdui->acontecimentos, 1000);
-        fflush(stdout);
-        if(cria_processos_chamada){
-            sorteio=0;
+
+        if (cria_processos_chamada) {
+            sorteio = 0;
         }
+        cria_processos_chamada = 0;
+        fl_add_browser_line_f(fdui->acontecimentos, "Sorteio: %i", sorteio);
+        fl_set_browser_bottomline(fdui->acontecimentos, 1000000);
         switch (sorteio) {
         case 0:
             sysCall();
@@ -52,14 +48,11 @@ void gerenciaInterrupcoes() {
             //pthread_create(&T_SEMAPHORE_V, &T_SEMAPHORE_V_ATTR, (void *) &semaphoreV, NULL);
             break;
         case 10:
-            if(fname){
-                f = fopen(fname, "r");
-                pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, retornaProcesso());
-                pthread_join(T_PROCESS_CREATE, NULL);
-            }
+            pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, NULL);
+            pthread_join(T_PROCESS_CREATE, NULL);
             break;
         case 11:
-            //pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
+            pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
             break;
         default:
             break;
@@ -71,7 +64,7 @@ void gerenciaInterrupcoes() {
 void executarInstrucao(int instrucao) {
     switch(instrucao) {
     case 1:
-        //exec(tempo);
+        exec();
         break;
     case 2:
         read(trilha);
@@ -86,18 +79,15 @@ void executarInstrucao(int instrucao) {
         //semaphoreP(sem);
         break;
     case 6:
-        //semaphoreV;
+        //semaphoreV(sem);
     default:
         break;
     }
 }
 
 void sysCall() {
-    selecionaArquivo();
-    //pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, (void *) retornaProcesso());
-    //pthread_join(&T_PROCESS_CREATE, (void **) &ch);
-    processCreate(retornaProcesso());
-    //pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, (void *) bcp->inicio->info->caminho);
+    pthread_create(&T_PROCESS_CREATE, &T_PROCESS_CREATE_ATTR, (void *) &processCreate, NULL);
+    pthread_join(T_PROCESS_CREATE, NULL);
 }
 
 processo_info *retornaProcesso() {
@@ -143,19 +133,6 @@ processo_info *retornaProcesso() {
     return pro;
 }
 
-void selecionaArquivo() {
-    // Chama o File Selector que retorna o caminho do arquivo selecionado
-    sem_wait(&S_FILE_SELECTOR);
-    //fname = fl_show_file_selector( "Selecione o arquivo sintetico", "", "", "" );
-    prgs_callback(fdui->carregar, 0);
-    sem_post(&S_FILE_SELECTOR);
-    if (!(f = fopen(fname, "r"))) {
-            fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!");
-            selecionaArquivo();
-    }
-
-}
-
 void readFile(const char *caminho) {
     FILE *file;
     char acao[15], linha;
@@ -164,7 +141,7 @@ void readFile(const char *caminho) {
     if (!(file = fopen(caminho, "r"))) {
         fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!\nPor favor, selecione um arquivo valido.");
     } else {
-        // Captura somente o cabeçalho
+        fl_add_browser_line_f(fdui->dados_programas, "========== Executando processo ==========");
         for (i = 0; !feof(file); i++) {
             if (i >= 6) {
                 linha = fgetc(file);
@@ -190,17 +167,20 @@ void readFile(const char *caminho) {
             }
         }
         // Finaliza o processo
-        fl_add_browser_line_f(fdui->log, "Processo %s finalizado", bcp->inicio->info->nome);
-        processFinish(bcp->inicio);
+        fl_add_browser_line_f(fdui->log, "Processo em execucao finalizado com sucesso.");
+        pthread_create(&T_PROCESS_FINISH, &T_PROCESS_FINISH_ATTR, (void *) &processFinish, NULL);
+        pthread_join(T_PROCESS_FINISH, NULL);
     }
 }
 
 void escalonador() {
     while (1) {
-        sleep(2);
-        //sem_wait(&S_FILE_SELECTOR);
-        gerenciaInterrupcoes();
-        //sem_post(&S_FILE_SELECTOR);
+        if (!lista_vazia(bcp)) {
+            usleep(2000);
+            sem_wait(&S_LISTA);
+            pthread_create(&T_READFILE, &T_READFILE_ATTR, (void *) &readFile, (void *) fname);
+            sem_post(&S_LISTA);
+        }
     }
 }
 
@@ -211,33 +191,51 @@ void escalonador() {
 void semaphoreV(char sem) {
 
 }*/
+void showFileSelector(FL_OBJECT *obj, long user_data) {
+    fdui = obj->form->fdui;
 
-void processCreate(processo_info *processo) {
+    sem_wait(&S_FILE_SELECTOR);
+    fname = fl_show_fselector("Carregar programa", "", "", "");
+    sem_post(&S_FILE_SELECTOR);
+}
+
+void processCreate() {
+    processo_info *p;
+
+    showFileSelector(fdui->carregar, 0);
+    if (!(f = fopen(fname, "r"))) {
+            fl_add_browser_line(fdui->log, "Nao foi possivel abrir o arquivo!!\n Processo nao criado");
+            return;
+    }
     sem_wait(&S_LISTA);
-    lista_inserir(bcp, processo);
-    fl_add_browser_line_f(fdui->log, "Processo %s criado no BCP", processo->nome);
-    imprimir_lista(bcp);
+    p = retornaProcesso();
+    lista_inserir(bcp, p);
+    fl_add_browser_line_f(fdui->log, "Processo %s criado no BCP", p->nome);
     sem_post(&S_LISTA);
 }
 
-void processFinish(no *processo) {
+void processFinish() {
     sem_wait(&S_LISTA);
-    lista_remover(bcp, processo);
-    fl_add_browser_line_f(fdui->log, "Processo %s excluido do BCP", processo->info->nome);
-    imprimir_lista(bcp);
+    if (!lista_vazia(bcp)) {
+        fl_add_browser_line_f(fdui->log, "Processo em execucao finalizado", bcp->inicio->info->nome);
+        lista_remover(bcp);
+    }
     sem_post(&S_LISTA);
 }
 
-/*void exec(int tempo) {
- *
-}*/
+void exec() {
+    fl_add_browser_line_f(fdui->dados_programas, "Executando");
+    usleep(20);
+}
 
 void read(int trilha) {
-    fl_add_browser_line_f(fdui->log, "Trilha %i lida", trilha);
+    fl_add_browser_line_f(fdui->dados_programas, "Trilha %i lida", trilha);
+    usleep(20);
 }
 
 void write(int trilha) {
-    fl_add_browser_line_f(fdui->log, "Dados escritos na trilha %i", trilha);
+    fl_add_browser_line_f(fdui->dados_programas, "Dados escritos na trilha %i", trilha);
+    usleep(20);
 }
 
 void inicializarLista() {
@@ -252,19 +250,19 @@ void inicializarLista() {
 }
 
 void inicializarThreads() {
-    pthread_attr_init(&T_READFILE_ATTR);
-    pthread_attr_init(&T_PROCESS_CREATE_ATTR);
-    pthread_attr_init(&T_PROCESS_FINISH_ATTR);
-    pthread_attr_init(&T_SEMAPHORE_P_ATTR);
-    pthread_attr_init(&T_SEMAPHORE_V_ATTR);
-    pthread_attr_init(&T_ESCALONADOR_ATTR);
-
     pthread_attr_setscope(&T_READFILE_ATTR, PTHREAD_SCOPE_SYSTEM);
     pthread_attr_setscope(&T_PROCESS_CREATE_ATTR, PTHREAD_SCOPE_SYSTEM);
     pthread_attr_setscope(&T_PROCESS_FINISH_ATTR, PTHREAD_SCOPE_SYSTEM);
     pthread_attr_setscope(&T_SEMAPHORE_P_ATTR, PTHREAD_SCOPE_SYSTEM);
     pthread_attr_setscope(&T_SEMAPHORE_V_ATTR, PTHREAD_SCOPE_SYSTEM);
     pthread_attr_setscope(&T_ESCALONADOR_ATTR, PTHREAD_SCOPE_SYSTEM);
+
+    pthread_attr_init(&T_READFILE_ATTR);
+    pthread_attr_init(&T_PROCESS_CREATE_ATTR);
+    pthread_attr_init(&T_PROCESS_FINISH_ATTR);
+    pthread_attr_init(&T_SEMAPHORE_P_ATTR);
+    pthread_attr_init(&T_SEMAPHORE_V_ATTR);
+    pthread_attr_init(&T_ESCALONADOR_ATTR);
 }
 
 void inicializarSemaforos() {

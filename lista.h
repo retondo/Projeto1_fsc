@@ -20,7 +20,7 @@ lista *bcp;
 
 int lista_iniciar(lista *l);
 void lista_inserir(lista *l, processo_info *elemento);
-void lista_remover(lista *l, no *elemento);
+void lista_remover(lista *l);
 void imprimir_lista(lista *l);
 int lista_vazia(lista *l);
 

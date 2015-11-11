@@ -2,6 +2,7 @@
 #define NUCLEO_H_
 
 #include "lista.h"
+#include "interface.h"
 #include <pthread.h>
 #include <semaphore.h>
 
@@ -12,7 +13,9 @@ pthread_t T_PROCESS_FINISH;
 pthread_t T_SEMAPHORE_P;
 pthread_t T_SEMAPHORE_V;
 pthread_t T_ESCALONADOR;
+pthread_t T_NUCLEO;
 
+pthread_attr_t T_NUCLEO_ATTR;
 pthread_attr_t T_READFILE_ATTR;
 pthread_attr_t T_PROCESS_CREATE_ATTR;
 pthread_attr_t T_PROCESS_FINISH_ATTR;
@@ -24,6 +27,7 @@ pthread_attr_t T_ESCALONADOR_ATTR;
 
 sem_t S_LISTA;
 sem_t S_FILE_SELECTOR;
+sem_t S_EXECUCAO;
 
 // OUTRAS VARIAVEIS
 FILE *f;
@@ -41,9 +45,9 @@ void memLoadRequest();                          // 6 - Chamada de operação de 
 void memLoadFinish();                           // 7 - Sinalização de final de carregamento
 void fsRequest();                               // 8 - Chamada para operação no sistema de arquivos
 void fsFinish();                                // 9 - Sinalização de final de operação no sistema de arquivos
-void processCreate(processo_info *processo);    // 10 - Chamada para a criação de um processo no BCP
-void processFinish(no *processo);                           // 11 - Chamada para terminar a execução de um processo no BCP
-void exec(int tempo);                           // Executa o processo por um tempo determinado
+void processCreate();    // 10 - Chamada para a criação de um processo no BCP
+void processFinish();                           // 11 - Chamada para terminar a execução de um processo no BCP
+void exec();                           // Executa o processo por um tempo determinado
 void read(int trilha);                          // Le uma trilha do hd
 void write(int trilha);                         // Escreve em uma trilha do hd
 void readFile(const char *caminho);              // Lê as instruções do arquivo sintético
@@ -51,11 +55,12 @@ void sysCall();                                  // Faz as chamadas de sistema d
 void inicializarLista();
 void inicializarThreads();
 void inicializarSemaforos();
-void selecionaArquivo();
 void nucleo();
 void escalonador();
 processo_info *retornaProcesso();
 void gerenciaInterrupcoes();
+void showFileSelector(FL_OBJECT *obj, long user_data);
+void call();
 
 //mostra que é a primeira iteraçao do nucleo e deve chamar primeiro a syscall()
 int primeira_vez;

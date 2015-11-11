@@ -24,10 +24,10 @@ const char *fname;
 
 FD_projeto * create_form_projeto( void );
 void prgs_callback(FL_OBJECT *obj, long user_data);
-void prgsAuto_callback(FL_OBJECT *obj, long user_data);
 void sorteio_callback(FL_OBJECT *obj, long user_data);
 void limpar_callback(FL_OBJECT *obj, long user_data);
 void cria_processo_callback(FL_OBJECT *obj, long user_data);
+
 
 int callback_carregar_sint_chamada;
 int arquivo_escolhido;
